@@ -19,7 +19,6 @@ valid_time_steps = [25, 50, 75, 100]
 valid_epochs = [12, 25, 50, 100]
 default_time_step = 100
 default_epoch = 25
-default_asset = 'BITCOIN'
 
 # Session state
 if 'model_ran' not in st.session_state:
@@ -54,12 +53,11 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     df = yf.download(asset, start=start_date, end=end_date)
     
     if df.empty or len(df) <= time_step:
-        st.error("⚠️ Data tidak tersedia atau jumlah data tidak cukup untuk membuat dataset dengan time_step yang dipilih.")
+        st.error("⚠️ Data tidak cukup untuk melakukan prediksi. Coba ubah tanggal atau time_step.")
         st.stop()
     
     df = df.reset_index()
-    df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
-
+    
     # Plot harga asli
     st.write(f"### 📊 Histori Harga Penutupan {asset_name_display}")
     fig = px.line(df, x='Date', y='Close', title=f'Histori Harga {asset_name_display}')
@@ -86,12 +84,12 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     X_train, y_train = create_dataset(train_data, time_step)
     X_test, y_test = create_dataset(test_data, time_step)
 
-    # **Validasi sebelum reshape**
+    # Validasi sebelum reshape
     if X_train.shape[0] == 0 or X_test.shape[0] == 0:
-        st.error("⚠️ Data tidak cukup untuk membuat dataset dengan time_step yang dipilih. Coba ubah tanggal atau time_step.")
+        st.error("⚠️ Data tidak cukup untuk melakukan prediksi. Coba ubah tanggal atau time_step.")
         st.stop()
 
-    # Reshape data jika aman
+    # Reshape data
     X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
     X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
 
@@ -122,27 +120,26 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     train_mape = np.mean(np.abs((original_ytrain - train_predict) / original_ytrain)) * 100
     test_mape = np.mean(np.abs((original_ytest - test_predict) / original_ytest)) * 100
 
-    # Save Model State
-    st.session_state.update({
-        'model_ran': True, 'df': df,
-        'train_predict': train_predict, 'test_predict': test_predict,
-        'original_ytrain': original_ytrain, 'original_ytest': original_ytest,
-        'time_step': time_step, 'num_test_days': len(test_predict)
+    # Display metrics
+    st.write("### 📊 Metrik Evaluasi")
+    metrik_data = pd.DataFrame({
+        "Metrik": ["RMSE (Training)", "RMSE (Testing)", "MAPE (Training)", "MAPE (Testing)"],
+        "Nilai": [train_rmse, test_rmse, train_mape, test_mape]
     })
+    st.table(metrik_data)
 
-    # **Display Prediction Results**
-    predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
+    # Display Prediction Results
     result_df = pd.DataFrame({
         'Date': df.iloc[time_step+1:len(train_predict)+len(test_predict)+time_step+1]['Date'].values,
         'Original_Close': np.concatenate([original_ytrain.flatten(), original_ytest.flatten()]),
         'Predicted_Close': np.concatenate([train_predict.flatten(), test_predict.flatten()])
     })
 
-    # **Plot hasil prediksi**
+    # Plot hasil prediksi
     st.write(f"### 🔮 Prediksi Harga {asset_name_display}")
     fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], labels={'value': 'Harga', 'Date': 'Tanggal'})
     st.plotly_chart(fig)
 
-    # **Tampilkan DataFrame**
+    # Tampilkan DataFrame
     st.write("### 📊 Hasil Prediksi")
     st.write(result_df)
