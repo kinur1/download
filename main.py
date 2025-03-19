@@ -129,6 +129,12 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
         'original_ytrain': original_ytrain, 'original_ytest': original_ytest,
         'time_step': time_step, 'num_test_days': len(test_predict)
     })
+    # Display metrics
+    st.write("### 📊 Metrik Evaluasi")
+    st.write(f"**✅ RMSE (Training):** {train_rmse}")
+    st.write(f"**✅ RMSE (Testing):** {test_rmse}")
+    st.write(f"**📉 MAPE (Training):** {train_mape:.2f}%")
+    st.write(f"**📉 MAPE (Testing):** {test_mape:.2f}%")
 
     # **Display Prediction Results**
     predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
