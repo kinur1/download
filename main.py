@@ -52,6 +52,11 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     # Fetch data
     st.write(f"📥 Mengambil data harga {asset_name_display} ({asset}) dari Yahoo Finance...")
     df = yf.download(asset, start=start_date, end=end_date)
+    
+    if df.empty or len(df) <= time_step:
+        st.error("⚠️ Data tidak tersedia atau jumlah data tidak cukup untuk membuat dataset dengan time_step yang dipilih.")
+        st.stop()
+    
     df = df.reset_index()
     df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
 
@@ -126,7 +131,6 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     st.write(f"**✅ RMSE (Testing):** {test_rmse}")
     st.write(f"**📉 MAPE (Training):** {train_mape:.2f}%")
     st.write(f"**📉 MAPE (Testing):** {test_mape:.2f}%")
-
     # Display Prediction Results
     predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
     result_df = pd.DataFrame({
