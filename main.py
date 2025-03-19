@@ -55,10 +55,6 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     df = df.reset_index()
     df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
 
-    if df.empty:
-        st.error("⚠️ Data tidak ditemukan untuk rentang tanggal yang dipilih. Coba pilih tanggal lain.")
-        st.stop()
-
     # Plot harga asli
     st.write(f"### 📊 Histori Harga Penutupan {asset_name_display}")
     fig = px.line(df, x='Date', y='Close', title=f'Histori Harga {asset_name_display}')
@@ -72,10 +68,6 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     # Split data
     training_size = int(len(closedf) * 0.90)
     train_data, test_data = closedf[:training_size], closedf[training_size:]
-
-    if len(train_data) <= time_step or len(test_data) <= time_step:
-        st.error("⚠️ Data tidak cukup untuk membuat dataset dengan time_step yang dipilih. Coba kurangi nilai time_step atau pilih rentang tanggal lebih luas.")
-        st.stop()
 
     # Function to create dataset
     def create_dataset(dataset, time_step=1):
@@ -120,9 +112,6 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     train_mape = np.mean(np.abs((original_ytrain - train_predict) / original_ytrain)) * 100
     test_mape = np.mean(np.abs((original_ytest - test_predict) / original_ytest)) * 100
 
-    st.write(f"train_predict: {len(train_predict)}, test_predict: {len(test_predict)}")
-    st.write(f"original_ytrain: {len(original_ytrain)}, original_ytest: {len(original_ytest)}")
-
     # Save Model State
     st.session_state.update({
         'model_ran': True, 'df': df,
@@ -130,3 +119,27 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
         'original_ytrain': original_ytrain, 'original_ytest': original_ytest,
         'time_step': time_step, 'num_test_days': len(test_predict)
     })
+
+    # Display metrics
+    st.write("### 📊 Metrik Evaluasi")
+    st.write(f"**✅ RMSE (Training):** {train_rmse}")
+    st.write(f"**✅ RMSE (Testing):** {test_rmse}")
+    st.write(f"**📉 MAPE (Training):** {train_mape:.2f}%")
+    st.write(f"**📉 MAPE (Testing):** {test_mape:.2f}%")
+
+    # Display Prediction Results
+    predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
+    result_df = pd.DataFrame({
+        'Date': df.iloc[time_step+1:len(train_predict)+len(test_predict)+time_step+1]['Date'].values,
+        'Original_Close': np.concatenate([original_ytrain.flatten(), original_ytest.flatten()]),
+        'Predicted_Close': np.concatenate([train_predict.flatten(), test_predict.flatten()])
+    })
+
+    # Plot hasil prediksi
+    st.write(f"### 🔮 Prediksi Harga {asset_name_display}")
+    fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], labels={'value': 'Harga', 'Date': 'Tanggal'})
+    st.plotly_chart(fig)
+
+    # Tampilkan DataFrame
+    st.write("### 📊 Hasil Prediksi")
+    st.write(result_df)
