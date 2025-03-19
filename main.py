@@ -86,11 +86,16 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     X_train, y_train = create_dataset(train_data, time_step)
     X_test, y_test = create_dataset(test_data, time_step)
 
-    # Reshape data
-    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
-    X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+    # **Validasi sebelum reshape**
+    if X_train.shape[0] == 0 or X_test.shape[0] == 0:
+        st.error("⚠️ Data tidak cukup untuk membuat dataset dengan time_step yang dipilih. Coba ubah tanggal atau time_step.")
+        st.stop()
 
-    # Build LSTM Model (Enhanced)
+    # Reshape data jika aman
+    X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+    X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
+
+    # Build LSTM Model
     model = Sequential([
         LSTM(50, return_sequences=True, input_shape=(time_step, 1), activation="relu"),
         LSTM(50, return_sequences=False, activation="relu"),
@@ -125,14 +130,7 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
         'time_step': time_step, 'num_test_days': len(test_predict)
     })
 
-    # Display metrics
-    st.write("### 📊 Metrik Evaluasi")
-    st.write(f"**✅ RMSE (Training):** {train_rmse}")
-    st.write(f"**✅ RMSE (Testing):** {test_rmse}")
-    st.write(f"**📉 MAPE (Training):** {train_mape:.2f}%")
-    st.write(f"**📉 MAPE (Testing):** {test_mape:.2f}%")
-
-    # **Tambahan: Display Prediction Results**
+    # **Display Prediction Results**
     predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
     result_df = pd.DataFrame({
         'Date': df.iloc[time_step+1:len(train_predict)+len(test_predict)+time_step+1]['Date'].values,
@@ -142,9 +140,7 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
 
     # **Plot hasil prediksi**
     st.write(f"### 🔮 Prediksi Harga {asset_name_display}")
-    fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], 
-                  labels={'value': 'Harga', 'Date': 'Tanggal'},
-                  title=f"Perbandingan Harga Asli vs Prediksi ({asset_name_display})")
+    fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], labels={'value': 'Harga', 'Date': 'Tanggal'})
     st.plotly_chart(fig)
 
     # **Tampilkan DataFrame**
