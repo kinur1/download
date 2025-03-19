@@ -139,8 +139,8 @@ if st.session_state.model_ran:
     predict_dates = df['Date'][st.session_state.time_step+1:st.session_state.time_step+1+len(train_predict)+len(test_predict)]
     result_df = pd.DataFrame({
         'Date': df.iloc[time_step+1:len(train_predict)+len(test_predict)+time_step+1]['Date'].values,
-    'Original_Close': np.concatenate([original_ytrain.flatten(), original_ytest.flatten()]),
-    'Predicted_Close': np.concatenate([train_predict.flatten(), test_predict.flatten()])
+        'Original_Close': np.concatenate([original_ytrain.flatten(), original_ytest.flatten()]),
+        'Predicted_Close': np.concatenate([train_predict.flatten(), test_predict.flatten()])
     })
 
     # Plot hasil prediksi
