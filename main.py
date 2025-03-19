@@ -131,7 +131,8 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
     st.write(f"**✅ RMSE (Testing):** {test_rmse}")
     st.write(f"**📉 MAPE (Training):** {train_mape:.2f}%")
     st.write(f"**📉 MAPE (Testing):** {test_mape:.2f}%")
-    # Display Prediction Results
+
+    # **Tambahan: Display Prediction Results**
     predict_dates = df['Date'][time_step+1:time_step+1+len(train_predict)+len(test_predict)]
     result_df = pd.DataFrame({
         'Date': df.iloc[time_step+1:len(train_predict)+len(test_predict)+time_step+1]['Date'].values,
@@ -139,11 +140,13 @@ if st.button("🚀 Jalankan Prediksi", disabled=not is_valid):
         'Predicted_Close': np.concatenate([train_predict.flatten(), test_predict.flatten()])
     })
 
-    # Plot hasil prediksi
+    # **Plot hasil prediksi**
     st.write(f"### 🔮 Prediksi Harga {asset_name_display}")
-    fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], labels={'value': 'Harga', 'Date': 'Tanggal'})
+    fig = px.line(result_df, x='Date', y=['Original_Close', 'Predicted_Close'], 
+                  labels={'value': 'Harga', 'Date': 'Tanggal'},
+                  title=f"Perbandingan Harga Asli vs Prediksi ({asset_name_display})")
     st.plotly_chart(fig)
 
-    # Tampilkan DataFrame
+    # **Tampilkan DataFrame**
     st.write("### 📊 Hasil Prediksi")
     st.write(result_df)
