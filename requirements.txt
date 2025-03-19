@@ -1,6 +1,6 @@
 streamlit
 plotly
-yfinance=
+yfinance
 pandas
 matplotlib
 scikit-learn
